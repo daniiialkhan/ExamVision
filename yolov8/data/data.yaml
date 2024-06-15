@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 3
+names: ['cheating', 'non-cheating', 'phone']
+
+roboflow:
+  workspace: cp2-sgbvv
+  project: offline-exam-monitoring
+  version: 8
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/cp2-sgbvv/offline-exam-monitoring/dataset/8
