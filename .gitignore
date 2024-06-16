@@ -140,7 +140,7 @@ yolov8/runs/
 
 # Model weights
 yolov8/models/*.pt
-yolov8/trained_model.pt
+# yolov8/trained_model.pt
 
 # Dataset files (if large or sensitive)
 yolov8/data/train/
