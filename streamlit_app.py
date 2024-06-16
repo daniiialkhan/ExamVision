@@ -1,53 +1,121 @@
 import streamlit as st
 import cv2
 from ultralytics import YOLO
-import numpy as np
 import utils.detection as detection
-import utils.post_processing as post_processing  # Ensure you have this module
+import tempfile
+import time
+
+# Define class names mapping
+class_names = {0: 'Non-cheating', 1: 'Cheating', 3: 'Background'}
 
 # Load YOLO model
 model_path = 'yolov8/trained_model.pt'
 model = YOLO(model_path)
 
-# Class names (adjust as per your dataset's class names)
-class_names = ['student', 'cheating_behavior']
-
 # Streamlit UI
 st.title('Live Object Detection for Exam Cheating Detection')
 
-# Start video capture
-video_capture = cv2.VideoCapture(0)
+# Selection between live video and file upload
+source = st.radio("Select video source", ('Live Video', 'Upload MP4 File'))
 
-# Check if video capture opened successfully
-if not video_capture.isOpened():
-    st.error("Error: Could not open video stream. Check webcam connection and permissions.")
-else:
-    stframe = st.empty()
+# Initialize placeholders for displaying class counts
+cheating_placeholder = st.sidebar.empty()
+non_cheating_placeholder = st.sidebar.empty()
+background_placeholder = st.sidebar.empty()
 
-    while True:
+def update_class_counts(results, class_names):
+    counts = {class_name: 0 for class_name in class_names.values()}
+    for result in results:
+        boxes = result.boxes
+        for box in boxes:
+            class_id = int(box.cls)
+            class_name = class_names.get(class_id, 'Unknown')
+            if class_name in counts:
+                counts[class_name] += 1
+    return counts
+
+def display_metrics(counts):
+    cheating_placeholder.metric(label='Cheating', value=counts['Cheating'])
+    non_cheating_placeholder.metric(label='Non-cheating', value=counts['Non-cheating'])
+    background_placeholder.metric(label='Background', value=counts['Background'])
+
+def process_video_capture(video_capture, stframe):
+    while video_capture.isOpened():
         ret, frame = video_capture.read()
         if not ret:
-            st.error("Failed to capture video.")
             break
 
         # Perform detection
-        results = model.predict(frame, device='cpu')  # Ensure you're using the correct device
+        results = detection.detect_objects(model, frame)
 
-        # Convert YOLO results to usable detections
-        detections = post_processing.convert_yolo_results_to_detections(results, frame.shape)
+        # Update class counts
+        counts = update_class_counts(results, class_names)
+        display_metrics(counts)
 
-        # Filter detections
-        detections = post_processing.filter_detections(detections, confidence_threshold=0.5)
+        # Draw boxes and labels on the frame
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                class_id = int(box.cls)
+                confidence = float(box.conf)
 
-        # Draw bounding boxes and labels
-        annotated_frame = post_processing.draw_boxes(frame, detections, class_names)
+                # Map class id to class name
+                class_name = class_names.get(class_id, 'Unknown')
 
-        # Convert annotated frame to RGB for Streamlit display
-        annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                # Skip drawing for the Phone class (commented out class id)
+                if class_name == 'Phone':
+                    continue
+
+                # Draw bounding box
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+                # Put label with confidence
+                label = f'{class_name} {confidence:.2f}'
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+        # Convert frame to RGB for Streamlit display
+        annotated_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Display the annotated frame
         stframe.image(annotated_frame, channels='RGB')
 
+    # At the end of the video, ask if the user wants to replay it
+    return st.button("Replay Video", key=f'replay-{time.time()}')  # Unique key
+
+if source == 'Live Video':
+    # Start video capture
+    video_capture = cv2.VideoCapture(0)
+    stframe = st.empty()
+
+    process_video_capture(video_capture, stframe)
+
     # Release the capture when done
     video_capture.release()
     cv2.destroyAllWindows()
+
+elif source == 'Upload MP4 File':
+    # File uploader
+    uploaded_file = st.file_uploader("Choose a video...", type=["mp4"])
+    if uploaded_file is not None:
+        # Save uploaded file to a temporary location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmpfile:
+            tmpfile.write(uploaded_file.read())
+            tmpfile_path = tmpfile.name
+        
+        stframe = st.empty()
+
+        # Function to process the video capture
+        def process_uploaded_video():
+            video_capture = cv2.VideoCapture(tmpfile_path)
+            replay_button = process_video_capture(video_capture, stframe)
+            video_capture.release()
+            cv2.destroyAllWindows()
+            return replay_button
+
+        # Process and replay the video as needed
+        while True:
+            replay = process_uploaded_video()
+            if not replay:
+                break
+            time.sleep(1)

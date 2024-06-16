@@ -19,6 +19,7 @@ def filter_detections(detections, confidence_threshold):
 def draw_boxes(image, detections, class_names):
     for (x1, y1, x2, y2, confidence, class_id) in detections:
         label = f"{class_names[class_id]}: {confidence:.2f}"
+        print("LABEL: ", label)
         cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
         cv2.putText(image, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
     return image
