@@ -6,7 +6,8 @@ import tempfile
 import time
 
 # Define class names mapping
-class_names = {0: 'Non-cheating', 1: 'Cheating', 3: 'Background'}
+class_names = {0: 'cheating', 1: 'good', 2: 'normal'}
+# names: ['cheating', 'good', 'normal']
 
 # Load YOLO model
 model_path = 'yolov8/trained_model.pt'
@@ -35,9 +36,9 @@ def update_class_counts(results, class_names):
     return counts
 
 def display_metrics(counts):
-    cheating_placeholder.metric(label='Cheating', value=counts['Cheating'])
-    non_cheating_placeholder.metric(label='Non-cheating', value=counts['Non-cheating'])
-    background_placeholder.metric(label='Background', value=counts['Background'])
+    cheating_placeholder.metric(label='cheating', value=counts['cheating'])
+    non_cheating_placeholder.metric(label='good', value=counts['good'])
+    background_placeholder.metric(label='normal', value=counts['normal'])
 
 def process_video_capture(video_capture, stframe):
     while video_capture.isOpened():
@@ -64,8 +65,8 @@ def process_video_capture(video_capture, stframe):
                 class_name = class_names.get(class_id, 'Unknown')
 
                 # Skip drawing for the Phone class (commented out class id)
-                if class_name == 'Phone':
-                    continue
+                # if class_name == 'Phone':
+                    # continue
 
                 # Draw bounding box
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)

@@ -3,11 +3,11 @@ val: ../valid/images
 test: ../test/images
 
 nc: 3
-names: ['cheating', 'non-cheating', 'phone']
+names: ['cheating', 'good', 'normal']
 
 roboflow:
-  workspace: cp2-sgbvv
-  project: offline-exam-monitoring
-  version: 8
+  workspace: fyp-terry-lee
+  project: exam-monitoring-system-v2
+  version: 4
   license: CC BY 4.0
-  url: https://universe.roboflow.com/cp2-sgbvv/offline-exam-monitoring/dataset/8
+  url: https://universe.roboflow.com/fyp-terry-lee/exam-monitoring-system-v2/dataset/4
