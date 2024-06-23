@@ -142,11 +142,15 @@ yolov8/runs/
 yolov8/models/*.pt
 yolov7/models/*.pt
 # yolov8/trained_model.pt
+yolov7/trained_model.pt
 
 # Dataset files (if large or sensitive)
 yolov8/data/train/*
 yolov8/data/valid/*
 yolov8/data/test/*
+yolov8/data-obb/train/*
+yolov8/data-obb/valid/*
+yolov8/data-obb/test/*
 yolov7/data/train/*
 yolov7/data/valid/*
 yolov7/data/test/*

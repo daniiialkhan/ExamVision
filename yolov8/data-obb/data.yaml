@@ -1,0 +1,11 @@
+path: yolov8/data-obb/
+
+
+train: train/images
+val: valid/images
+test: test/images
+
+names: 
+  0: cheating
+  1: good
+  2: normal
