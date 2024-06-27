@@ -164,6 +164,7 @@ yolov7/data/test/*
 
 # Logs and output files
 *.log
+cheating_detections/*
 
 # Local environment and configurations
 .env
